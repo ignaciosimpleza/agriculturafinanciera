@@ -21,12 +21,12 @@
   --font:'Sora',sans-serif;--sb-w:256px;--tb-h:54px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;overflow:hidden}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:18px;overflow:hidden}
 .app{display:flex;height:100vh}
 /* SIDEBAR */
 .sb{width:var(--sb-w);min-width:var(--sb-w);background:var(--sb-bg);color:var(--sb-text);display:flex;flex-direction:column;flex-shrink:0;z-index:10}
 .sb-head{padding:0 1.2rem;border-bottom:1px solid var(--sb-line);display:flex;align-items:center;gap:.65rem;height:var(--tb-h);flex-shrink:0}
-.sb-head img{height:28px;width:auto;flex-shrink:0}
+.sb-head img{height:50px;width:auto;flex-shrink:0}
 .sb-head .brand{font-size:.63rem;font-weight:700;color:var(--sb-muted);letter-spacing:.09em;text-transform:uppercase;line-height:1.3}
 .sb-tabs{display:flex;flex-direction:column;gap:0;padding:.7rem .8rem .4rem;flex-shrink:0}
 .sb-tab-btn{display:flex;align-items:center;gap:.6rem;padding:.65rem .85rem;cursor:pointer;font-family:var(--font);font-size:.79rem;font-weight:600;color:rgba(232,238,239,.52);background:transparent;border:none;border-left:3px solid transparent;border-radius:var(--r-md);transition:all .18s;user-select:none;text-align:left;width:100%}
@@ -886,7 +886,7 @@ function update(){
   const rdoCur=CROPS.map(k=>+sc.crops[k].rdoOp.toFixed(1));
   const rdoBase=CROPS.map(k=>+calc(p,1,1,lev).crops[k].rdoOp.toFixed(1));
   const barDs=[{label:'Activo',data:rdoCur,color:'#32E8A9'}];
-  if(hasSh)barDs.push({label:'Base',data:rdoBase,color:'#F7DC6F'});
+  if(hasSh)barDs.push({label:'Base',data:rdoBase,color:'#7F7F7F'});
   const barCfg={labels:['Soja 1ra','Maíz','Girasol','Trigo','Soja 2da'],datasets:barDs};
   if(CH.bar){CH.bar.update(barCfg);}else{CH.bar=makeBarChart('barRdoChart',barCfg);}
 

@@ -21,12 +21,12 @@
   --font:'Sora',sans-serif;--sb-w:256px;--tb-h:54px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;overflow:hidden}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;overflow:hidden}
 .app{display:flex;height:100vh}
 /* SIDEBAR */
 .sb{width:var(--sb-w);min-width:var(--sb-w);background:var(--sb-bg);color:var(--sb-text);display:flex;flex-direction:column;flex-shrink:0;z-index:10}
 .sb-head{padding:0 1.2rem;border-bottom:1px solid var(--sb-line);display:flex;align-items:center;gap:.65rem;height:var(--tb-h);flex-shrink:0}
-.sb-head img{height:50px;width:auto;flex-shrink:0}
+.sb-head img{height:28px;width:auto;flex-shrink:0}
 .sb-head .brand{font-size:.63rem;font-weight:700;color:var(--sb-muted);letter-spacing:.09em;text-transform:uppercase;line-height:1.3}
 .sb-tabs{display:flex;flex-direction:column;gap:0;padding:.7rem .8rem .4rem;flex-shrink:0}
 .sb-tab-btn{display:flex;align-items:center;gap:.6rem;padding:.65rem .85rem;cursor:pointer;font-family:var(--font);font-size:.79rem;font-weight:600;color:rgba(232,238,239,.52);background:transparent;border:none;border-left:3px solid transparent;border-radius:var(--r-md);transition:all .18s;user-select:none;text-align:left;width:100%}
@@ -477,10 +477,10 @@ tr.sep td{border-top:2px dashed var(--border)}
       <div class="blk-body">
         <div style="margin-top:.8rem;margin-bottom:.55rem">
           <div class="metric-toggle" id="heat-toggle">
-            <div class="mt-btn on" data-metric="roe" onclick="switchHeatMetric(this)">ROE</div>
+            <div class="mt-btn on" data-metric="rdoOp" onclick="switchHeatMetric(this)">Rdo. Operativo</div>
             <div class="mt-btn" data-metric="roa" onclick="switchHeatMetric(this)">ROA</div>
-            <div class="mt-btn" data-metric="rdoOp" onclick="switchHeatMetric(this)">Rdo. Operativo</div>
             <div class="mt-btn" data-metric="util" onclick="switchHeatMetric(this)">Utilidad Neta</div>
+            <div class="mt-btn" data-metric="roe" onclick="switchHeatMetric(this)">ROE</div>
           </div>
         </div>
         <div class="mx" style="max-height:260px"><table><thead id="hx-head"></thead><tbody id="hx-body"></tbody></table></div>
@@ -661,14 +661,14 @@ function makeBarChart(cid,cfg){
     let yMn=Math.min(0,...allV),yMx=Math.max(...allV);
     const yP=(yMx-yMn)*0.12||10;yMn=Math.floor((yMn-yP)/10)*10;yMx=Math.ceil((yMx+yP)/10)*10;
     const mY=v=>PT+cH-((v-yMn)/(yMx-yMn))*cH;
-    ctx.font=`${8*r}px Sora,sans-serif`;
+    ctx.font=`${11*r}px Sora,sans-serif`;
     for(let i=0;i<=5;i++){const v=yMn+(yMx-yMn)*i/5,y=mY(v);ctx.strokeStyle='#ece7e0';ctx.lineWidth=r;ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(W-PR,y);ctx.stroke();ctx.fillStyle='#8fa8ac';ctx.textAlign='right';ctx.fillText(v.toFixed(0),PL-4*r,y+3*r);}
     const y0=mY(0);ctx.strokeStyle='rgba(108,134,140,.4)';ctx.lineWidth=1.5*r;ctx.beginPath();ctx.moveTo(PL,y0);ctx.lineTo(W-PR,y0);ctx.stroke();
     const gW=cW/n,bPad=0.2,bW=(gW*(1-bPad))/sN,gPad=gW*bPad/2;
-    c.datasets.forEach((ds,si)=>{ds.data.forEach((v,i)=>{const gx=PL+i*gW+gPad,bx=gx+si*bW,y0v=mY(0),bh=Math.abs(mY(v)-y0v);const isHov=tip.visible&&tip.idx===i;ctx.fillStyle=isHov?ds.color:ds.color+'cc';const rx=Math.min(3*r,bW*0.3);ctx.beginPath();if(ctx.roundRect)ctx.roundRect(bx,v>=0?mY(v):y0v,bW,bh,v>=0?[rx,rx,0,0]:[0,0,rx,rx]);else ctx.rect(bx,v>=0?mY(v):y0v,bW,bh);ctx.fill();if(isHov){ctx.fillStyle='#4a5f63';ctx.font=`bold ${8*r}px Sora,sans-serif`;ctx.textAlign='center';ctx.fillText(v.toFixed(0),bx+bW/2,v>=0?mY(v)-4*r:y0v+bh+11*r);}});});
-    ctx.fillStyle='#6C868C';ctx.textAlign='center';ctx.font=`${8*r}px Sora,sans-serif`;c.labels.forEach((l,i)=>ctx.fillText(l,PL+i*gW+gW/2,H-PB+12*r));
-    let lx=PL;c.datasets.forEach(ds=>{ctx.fillStyle=ds.color;ctx.fillRect(lx,10*r,10*r,10*r);ctx.fillStyle='#4a5f63';ctx.textAlign='left';ctx.font=`${8*r}px Sora,sans-serif`;ctx.fillText(ds.label,lx+13*r,19*r);lx+=ctx.measureText(ds.label).width+26*r;});
-    if(tip.visible&&tip.idx>=0){const i=tip.idx,cx=PL+(i+0.5)*gW,lines=[c.labels[i],...c.datasets.map(d=>`${d.label}: ${d.data[i].toFixed(1)}`)];const bw=148*r,lh=12*r,bh2=lines.length*lh+10*r;let bx=cx+7*r,by=PT;if(bx+bw>W-PR)bx=cx-bw-7*r;ctx.fillStyle='rgba(44,62,63,.92)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(bx,by,bw,bh2,4*r);else ctx.rect(bx,by,bw,bh2);ctx.fill();ctx.fillStyle='#c8d8da';ctx.font=`bold ${8*r}px Sora,sans-serif`;ctx.textAlign='left';ctx.fillText(lines[0],bx+6*r,by+11*r);lines.slice(1).forEach((l,j)=>{ctx.fillStyle=c.datasets[j].color;ctx.font=`${8*r}px Sora,sans-serif`;ctx.fillText(l,bx+6*r,by+(j+2)*lh+3*r);});}
+    c.datasets.forEach((ds,si)=>{ds.data.forEach((v,i)=>{const gx=PL+i*gW+gPad,bx=gx+si*bW,y0v=mY(0),bh=Math.abs(mY(v)-y0v);const isHov=tip.visible&&tip.idx===i;ctx.fillStyle=isHov?ds.color:ds.color+'cc';const rx=Math.min(3*r,bW*0.3);ctx.beginPath();if(ctx.roundRect)ctx.roundRect(bx,v>=0?mY(v):y0v,bW,bh,v>=0?[rx,rx,0,0]:[0,0,rx,rx]);else ctx.rect(bx,v>=0?mY(v):y0v,bW,bh);ctx.fill();if(isHov){ctx.fillStyle='#4a5f63';ctx.font=`bold ${11*r}px Sora,sans-serif`;ctx.textAlign='center';ctx.fillText(v.toFixed(0),bx+bW/2,v>=0?mY(v)-4*r:y0v+bh+11*r);}});});
+    ctx.fillStyle='#6C868C';ctx.textAlign='center';ctx.font=`${11*r}px Sora,sans-serif`;c.labels.forEach((l,i)=>ctx.fillText(l,PL+i*gW+gW/2,H-PB+12*r));
+    let lx=PL;c.datasets.forEach(ds=>{ctx.fillStyle=ds.color;ctx.fillRect(lx,10*r,10*r,10*r);ctx.fillStyle='#4a5f63';ctx.textAlign='left';ctx.font=`${11*r}px Sora,sans-serif`;ctx.fillText(ds.label,lx+13*r,19*r);lx+=ctx.measureText(ds.label).width+26*r;});
+    if(tip.visible&&tip.idx>=0){const i=tip.idx,cx=PL+(i+0.5)*gW,lines=[c.labels[i],...c.datasets.map(d=>`${d.label}: ${d.data[i].toFixed(1)}`)];const bw=148*r,lh=12*r,bh2=lines.length*lh+10*r;let bx=cx+7*r,by=PT;if(bx+bw>W-PR)bx=cx-bw-7*r;ctx.fillStyle='rgba(44,62,63,.92)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(bx,by,bw,bh2,4*r);else ctx.rect(bx,by,bw,bh2);ctx.fill();ctx.fillStyle='#c8d8da';ctx.font=`bold ${11*r}px Sora,sans-serif`;ctx.textAlign='left';ctx.fillText(lines[0],bx+6*r,by+11*r);lines.slice(1).forEach((l,j)=>{ctx.fillStyle=c.datasets[j].color;ctx.font=`${11*r}px Sora,sans-serif`;ctx.fillText(l,bx+6*r,by+(j+2)*lh+3*r);});}
   }
   cv.addEventListener('mousemove',e=>{const r=dpr(),rect=cv.getBoundingClientRect(),mx=(e.clientX-rect.left)*r,PL=50*r,cW=cv.width-PL-12*r,gW=cW/_c.labels.length,idx=Math.floor((mx-PL)/gW);if(idx>=0&&idx<_c.labels.length){tip={visible:true,idx};draw();}else{tip={visible:false,idx:-1};draw();}});
   cv.addEventListener('mouseleave',()=>{tip={visible:false,idx:-1};draw();});
@@ -693,11 +693,11 @@ function makeLineChart(cid,cfg){
     if(yMn===yMx){yMn-=step;yMx+=step;}
     const xN=c.labels.length,xS=cW/(xN-1);
     const mX=i=>PL+i*xS,mY=v=>PT+cH-((v-yMn)/(yMx-yMn))*cH;
-    ctx.font=`${8.5*r}px Sora,sans-serif`;
+    ctx.font=`${11.5*r}px Sora,sans-serif`;
     for(let i=0;i<=6;i++){const v=yMn+(yMx-yMn)*i/6,y=mY(v);ctx.strokeStyle='#ece7e0';ctx.lineWidth=r;ctx.beginPath();ctx.moveTo(PL,y);ctx.lineTo(W-PR,y);ctx.stroke();ctx.fillStyle='#8fa8ac';ctx.textAlign='right';ctx.fillText(v.toFixed(c.yDec||0)+(c.yUnit||''),PL-4*r,y+3.5*r);}
     if(yMn<0&&yMx>0){const y0=mY(0);ctx.save();ctx.strokeStyle='rgba(108,134,140,.28)';ctx.lineWidth=1.5*r;ctx.setLineDash([4*r,3*r]);ctx.beginPath();ctx.moveTo(PL,y0);ctx.lineTo(W-PR,y0);ctx.stroke();ctx.restore();}
-    if(c.yTitle){ctx.save();ctx.translate(12*r,H/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#6C868C';ctx.textAlign='center';ctx.font=`${8.5*r}px Sora,sans-serif`;ctx.fillText(c.yTitle,0,0);ctx.restore();}
-    ctx.fillStyle='#8fa8ac';ctx.textAlign='center';ctx.font=`${8.5*r}px Sora,sans-serif`;c.labels.forEach((l,i)=>ctx.fillText(l,mX(i),H-PB+13*r));
+    if(c.yTitle){ctx.save();ctx.translate(12*r,H/2);ctx.rotate(-Math.PI/2);ctx.fillStyle='#6C868C';ctx.textAlign='center';ctx.font=`${11.5*r}px Sora,sans-serif`;ctx.fillText(c.yTitle,0,0);ctx.restore();}
+    ctx.fillStyle='#8fa8ac';ctx.textAlign='center';ctx.font=`${11.5*r}px Sora,sans-serif`;c.labels.forEach((l,i)=>ctx.fillText(l,mX(i),H-PB+13*r));
     c.datasets.forEach(ds=>{
       const pts=ds.data.map((v,i)=>({x:mX(i),y:mY(v)}));
       ctx.save();ctx.lineWidth=2.5*r;ctx.strokeStyle=ds.color;ctx.lineJoin='round';ctx.lineCap='round';
@@ -707,15 +707,15 @@ function makeLineChart(cid,cfg){
       ctx.restore();
     });
     const itemW=Math.min(95*r,(W-PL-PR)/c.datasets.length);
-    c.datasets.forEach((ds,i)=>{const lx=PL+i*itemW;ctx.fillStyle=ds.color;ctx.fillRect(lx,11*r,13*r,3*r);ctx.beginPath();ctx.arc(lx+6.5*r,12.5*r,3.5*r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4a5f63';ctx.textAlign='left';ctx.font=`${8.5*r}px Sora,sans-serif`;ctx.fillText(ds.label,lx+18*r,17*r);});
+    c.datasets.forEach((ds,i)=>{const lx=PL+i*itemW;ctx.fillStyle=ds.color;ctx.fillRect(lx,11*r,13*r,3*r);ctx.beginPath();ctx.arc(lx+6.5*r,12.5*r,3.5*r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#4a5f63';ctx.textAlign='left';ctx.font=`${11.5*r}px Sora,sans-serif`;ctx.fillText(ds.label,lx+18*r,17*r);});
     if(tip.visible&&tip.idx>=0){
       const i=tip.idx,x=mX(i);
       ctx.save();ctx.strokeStyle='rgba(108,134,140,.3)';ctx.lineWidth=r;ctx.setLineDash([3*r,2*r]);ctx.beginPath();ctx.moveTo(x,PT);ctx.lineTo(x,H-PB);ctx.stroke();ctx.restore();
       const unit=c.yUnit||'',lines=[c.labels[i],...c.datasets.map(d=>`${d.label}: ${d.data[i].toFixed(c.tDec!=null?c.tDec:1)}${unit}`)];
       const bw=148*r,lh=12*r,bh=lines.length*lh+10*r;let bx=x+7*r,by=PT+4*r;if(bx+bw>W-PR)bx=x-bw-7*r;
       ctx.fillStyle='rgba(44,62,63,.92)';ctx.beginPath();if(ctx.roundRect)ctx.roundRect(bx,by,bw,bh,4*r);else ctx.rect(bx,by,bw,bh);ctx.fill();
-      ctx.fillStyle='#c8d8da';ctx.font=`bold ${8.5*r}px Sora,sans-serif`;ctx.textAlign='left';ctx.fillText(lines[0],bx+6*r,by+11*r);
-      lines.slice(1).forEach((l,j)=>{ctx.fillStyle=c.datasets[j].color;ctx.font=`${8.5*r}px Sora,sans-serif`;ctx.fillText(l,bx+6*r,by+(j+2)*lh+3*r);});
+      ctx.fillStyle='#c8d8da';ctx.font=`bold ${11.5*r}px Sora,sans-serif`;ctx.textAlign='left';ctx.fillText(lines[0],bx+6*r,by+11*r);
+      lines.slice(1).forEach((l,j)=>{ctx.fillStyle=c.datasets[j].color;ctx.font=`${11.5*r}px Sora,sans-serif`;ctx.fillText(l,bx+6*r,by+(j+2)*lh+3*r);});
     }
   }
   cv.addEventListener('mousemove',e=>{const r=dpr(),rect=cv.getBoundingClientRect(),mx=(e.clientX-rect.left)*r,PL=54*r,PR=16*r,cW=cv.width-PL-PR,xN=_c.labels.length,xS=cW/(xN-1);let ci=-1,md=9999;for(let i=0;i<xN;i++){const cx=PL+i*xS;if(Math.abs(mx-cx)<md){md=Math.abs(mx-cx);ci=i;}}tip={visible:true,idx:ci};draw();});
@@ -779,7 +779,7 @@ function buildFinRoeCfg(p){
 }
 
 // ═══ HEAT & SENS TABLE ════════════════════════════
-let heatMetric='roe', sensMetric='rdoOp';
+let heatMetric='rdoOp', sensMetric='rdoOp';
 
 function getHeatVal(sc,metric){
   if(metric==='roe')return sc.roe*100;
@@ -882,11 +882,11 @@ function update(){
   $('kpi-roe-s').textContent=sc.roe>.2?'🟢 Excelente':sc.roe>.1?'🔵 Positivo':sc.roe>0?'🟡 Bajo':'🔴 Pérdida';
   $('kpi-apal').textContent=sc.apal.toFixed(2)+'×';
 
-  // ── Bar chart: Rdo.Op por cultivo ──
-  const rdoCur=CROPS.map(k=>+(sc.crops[k].rdoOp*ROT[k]).toFixed(1));
-  const rdoBase=CROPS.map(k=>{const sc0=calc(p,1,1,lev);return+(sc0.crops[k].rdoOp*ROT[k]).toFixed(1);});
+  // ── Bar chart: Rdo.Op por cultivo — U$S/ha SIN ponderar ──
+  const rdoCur=CROPS.map(k=>+sc.crops[k].rdoOp.toFixed(1));
+  const rdoBase=CROPS.map(k=>+calc(p,1,1,lev).crops[k].rdoOp.toFixed(1));
   const barDs=[{label:'Activo',data:rdoCur,color:'#32E8A9'}];
-  if(hasSh)barDs.push({label:'Base',data:rdoBase,color:'rgba(108,134,140,.6)'});
+  if(hasSh)barDs.push({label:'Base',data:rdoBase,color:'#F7DC6F'});
   const barCfg={labels:['Soja 1ra','Maíz','Girasol','Trigo','Soja 2da'],datasets:barDs};
   if(CH.bar){CH.bar.update(barCfg);}else{CH.bar=makeBarChart('barRdoChart',barCfg);}
 

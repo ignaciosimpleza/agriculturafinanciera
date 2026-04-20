@@ -902,6 +902,7 @@ function update(){
   const p=getP();
   const pM=1+p.priceShock,yM=1+p.yieldShock,lev=p.leverage;
   const sc=calc(p,pM,yM,lev);
+  const ac=getAC();
   const GDIR=getGDIR(),ROT=getRot(),GCOM=getGCOM(),COSE=getCOSE();
   updateCostTotals();
 

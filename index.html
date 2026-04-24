@@ -625,13 +625,24 @@ tr.sep td{border-top:2px dashed var(--border)}
           <button class="pdf-ga-btn" onclick="pdfToggleAll('neg',true)">Seleccionar todo</button>
           <button class="pdf-ga-btn" onclick="pdfToggleAll('neg',false)">Ninguno</button>
         </div>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="pdf-neg-kpis" checked> Indicadores Clave (KPIs)</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="pdf-neg-charts" checked> Gráficos de Sensibilidad</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-params" checked> Parámetros del Modelo</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-costos"> Costos Directos Desagregados</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-pnl"> P&L por Cultivo</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-rind"> Rindes de Indiferencia</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-sens"> Tabla de Sensibilidad</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="neg-overview" checked>
+          <span><b>Indicadores & Gráficos</b><br><small style="color:var(--muted);font-size:.65rem">KPIs + 3 gráficos de sensibilidad</small></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="neg-params" checked>
+          <span><b>Parámetros del Modelo</b></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="neg-costos">
+          <span><b>Costos Directos Desagregados</b></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="neg-pnl">
+          <span><b>P&L por Cultivo</b></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="neg-rind">
+          <span><b>Rindes de Indiferencia</b></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="neg-sens">
+          <span><b>Tabla de Sensibilidad</b></span>
+        </label>
       </div>
       <!-- El Negocio Financiado -->
       <div>
@@ -640,12 +651,21 @@ tr.sep td{border-top:2px dashed var(--border)}
           <button class="pdf-ga-btn" onclick="pdfToggleAll('fin',true)">Seleccionar todo</button>
           <button class="pdf-ga-btn" onclick="pdfToggleAll('fin',false)">Ninguno</button>
         </div>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="pdf-fin-kpis" checked> Indicadores Clave (KPIs)</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="pdf-fin-charts" checked> Gráficos ROA / ROE</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-deuda" checked> Estructura de Deuda</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-calor"> Mapa de Calor</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-dupont" checked> Descomposición DuPont</label>
-        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-socio"> Socio a Riesgo</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="fin-overview" checked>
+          <span><b>Indicadores & Gráficos</b><br><small style="color:var(--muted);font-size:.65rem">KPIs + gráficos ROA / ROE</small></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="fin-deuda" checked>
+          <span><b>Estructura de Deuda</b></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="fin-calor">
+          <span><b>Mapa de Calor</b></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="fin-dupont" checked>
+          <span><b>Descomposición DuPont</b></span>
+        </label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="fin-socio">
+          <span><b>Socio a Riesgo</b></span>
+        </label>
       </div>
     </div>
     <div id="pdf-modal-foot">
@@ -1163,20 +1183,30 @@ $('logo-sb').src='data:image/png;base64,'+LOGO_BLANCO;
 buildCostTable();updateRotSum();update();
 
 // ═══ PDF EXPORT ════════════════════════════════════
-const PDF_SECTIONS=[
-  {id:'pdf-neg-kpis',   tab:'neg', label:'El Negocio — Indicadores Clave',            isBlock:false},
-  {id:'pdf-neg-charts', tab:'neg', label:'El Negocio — Gráficos de Sensibilidad',      isBlock:false},
-  {id:'blk-params',     tab:'neg', label:'El Negocio — Parámetros del Modelo',         isBlock:true},
-  {id:'blk-costos',     tab:'neg', label:'El Negocio — Costos Directos',               isBlock:true},
-  {id:'blk-pnl',        tab:'neg', label:'El Negocio — P&L por Cultivo',               isBlock:true},
-  {id:'blk-rind',       tab:'neg', label:'El Negocio — Rindes de Indiferencia',        isBlock:true},
-  {id:'blk-sens',       tab:'neg', label:'El Negocio — Tabla de Sensibilidad',         isBlock:true},
-  {id:'pdf-fin-kpis',   tab:'fin', label:'Negocio Financiado — Indicadores Clave',     isBlock:false},
-  {id:'pdf-fin-charts', tab:'fin', label:'Negocio Financiado — Gráficos ROA / ROE',    isBlock:false},
-  {id:'blk-deuda',      tab:'fin', label:'Negocio Financiado — Estructura de Deuda',   isBlock:true},
-  {id:'blk-calor',      tab:'fin', label:'Negocio Financiado — Mapa de Calor',         isBlock:true},
-  {id:'blk-dupont',     tab:'fin', label:'Negocio Financiado — Descomposición DuPont', isBlock:true},
-  {id:'blk-socio',      tab:'fin', label:'Negocio Financiado — Socio a Riesgo',        isBlock:true},
+// Cada combo = una página del PDF. sections[] = secciones apiladas verticalmente.
+const PDF_COMBOS=[
+  {id:'neg-overview', tab:'neg', pageLabel:'El Negocio — Indicadores & Gráficos',
+   sections:[{id:'pdf-neg-kpis',isBlock:false},{id:'pdf-neg-charts',isBlock:false}]},
+  {id:'neg-params',   tab:'neg', pageLabel:'El Negocio — Parámetros del Modelo',
+   sections:[{id:'blk-params',isBlock:true}]},
+  {id:'neg-costos',   tab:'neg', pageLabel:'El Negocio — Costos Directos',
+   sections:[{id:'blk-costos',isBlock:true}]},
+  {id:'neg-pnl',      tab:'neg', pageLabel:'El Negocio — P&L por Cultivo',
+   sections:[{id:'blk-pnl',isBlock:true}]},
+  {id:'neg-rind',     tab:'neg', pageLabel:'El Negocio — Rindes de Indiferencia',
+   sections:[{id:'blk-rind',isBlock:true}]},
+  {id:'neg-sens',     tab:'neg', pageLabel:'El Negocio — Tabla de Sensibilidad',
+   sections:[{id:'blk-sens',isBlock:true}]},
+  {id:'fin-overview', tab:'fin', pageLabel:'Negocio Financiado — Indicadores & Gráficos',
+   sections:[{id:'pdf-fin-kpis',isBlock:false},{id:'pdf-fin-charts',isBlock:false}]},
+  {id:'fin-deuda',    tab:'fin', pageLabel:'Negocio Financiado — Estructura de Deuda',
+   sections:[{id:'blk-deuda',isBlock:true}]},
+  {id:'fin-calor',    tab:'fin', pageLabel:'Negocio Financiado — Mapa de Calor',
+   sections:[{id:'blk-calor',isBlock:true}]},
+  {id:'fin-dupont',   tab:'fin', pageLabel:'Negocio Financiado — Descomposición DuPont',
+   sections:[{id:'blk-dupont',isBlock:true}]},
+  {id:'fin-socio',    tab:'fin', pageLabel:'Negocio Financiado — Socio a Riesgo',
+   sections:[{id:'blk-socio',isBlock:true}]},
 ];
 
 function openPdfModal(){$('pdf-modal-overlay').classList.add('open');}
@@ -1185,26 +1215,49 @@ function pdfSleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function getCurrentTabName(){const b=document.querySelector('.sb-tab-btn.active');return b&&b.classList.contains('fin')?'fin':'neg';}
 function pdfToggleAll(tab,checked){document.querySelectorAll(`#pdf-modal-body input[data-tab="${tab}"]`).forEach(c=>c.checked=checked);}
 
+function pdfUnlockOverflow(refEl){
+  const unlocked=[];
+  let anc=refEl.parentElement;
+  while(anc&&anc!==document.body){
+    const cs=getComputedStyle(anc);
+    if(cs.overflow!=='visible'||cs.overflowY!=='visible'){
+      unlocked.push({el:anc,ov:anc.style.overflow,ovy:anc.style.overflowY,h:anc.style.height,mh:anc.style.maxHeight});
+      anc.style.overflow='visible';anc.style.overflowY='visible';
+      if(anc.style.height&&anc.style.height!=='auto')anc.style.height='auto';
+      if(anc.style.maxHeight)anc.style.maxHeight='none';
+    }
+    anc=anc.parentElement;
+  }
+  const saved={bodyOv:document.body.style.overflow,htmlOv:document.documentElement.style.overflow,htmlH:document.documentElement.style.height};
+  document.body.style.overflow='visible';
+  document.documentElement.style.overflow='visible';
+  document.documentElement.style.height='auto';
+  return {unlocked,saved};
+}
+function pdfRestoreOverflow({unlocked,saved}){
+  unlocked.forEach(u=>{u.el.style.overflow=u.ov;u.el.style.overflowY=u.ovy;u.el.style.height=u.h;u.el.style.maxHeight=u.mh;});
+  document.body.style.overflow=saved.bodyOv;
+  document.documentElement.style.overflow=saved.htmlOv;
+  document.documentElement.style.height=saved.htmlH;
+}
+
 async function generatePDF(){
   const checked=[...document.querySelectorAll('#pdf-modal-body input[type=checkbox]:checked')];
   if(!checked.length){alert('Seleccioná al menos una sección.');return;}
   const selIds=new Set(checked.map(c=>c.value));
-  const items=PDF_SECTIONS.filter(s=>selIds.has(s.id));
+  const combos=PDF_COMBOS.filter(c=>selIds.has(c.id));
 
   const genBtn=$('pdf-gen-btn');
   const progEl=$('pdf-progress');
-  genBtn.disabled=true;
-  genBtn.textContent='⏳ Generando...';
-  progEl.style.display='block';
-  progEl.textContent='Iniciando...';
+  genBtn.disabled=true;genBtn.textContent='⏳ Generando...';
+  progEl.style.display='block';progEl.textContent='Iniciando...';
   await pdfSleep(60);
 
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  const PW=297,PH=210,HDR=13,MG=8;
-  const logoDataUrl='data:image/png;base64,'+LOGO_BLANCO;
+  const PW=297,PH=210,HDR=13,MG=8,GAP=5;
 
-  // Detect logo aspect ratio once
+  const logoDataUrl='data:image/png;base64,'+LOGO_BLANCO;
   const logoAspect=await new Promise(res=>{
     const img=new Image();img.onload=()=>res(img.width/img.height);img.onerror=()=>res(5);img.src=logoDataUrl;
   });
@@ -1213,108 +1266,98 @@ async function generatePDF(){
   let curTab=origTab;
   let firstPage=true;
 
-  for(let i=0;i<items.length;i++){
-    const item=items[i];
-    progEl.textContent=`Procesando ${i+1} de ${items.length}: ${item.label.split('—')[1]?.trim()||item.label}...`;
+  for(let ci=0;ci<combos.length;ci++){
+    const combo=combos[ci];
+    progEl.textContent=`Página ${ci+1} de ${combos.length}: ${combo.pageLabel.split('—')[1]?.trim()||combo.pageLabel}...`;
 
-    // Switch tab if needed
-    if(item.tab!==curTab){
-      const tabBtn=document.querySelector(`.sb-tab-btn.${item.tab}`);
-      if(tabBtn){switchTab(item.tab,tabBtn);curTab=item.tab;}
+    // Cambiar pestaña si es necesario
+    if(combo.tab!==curTab){
+      const tabBtn=document.querySelector(`.sb-tab-btn.${combo.tab}`);
+      if(tabBtn){switchTab(combo.tab,tabBtn);curTab=combo.tab;}
       await pdfSleep(500);
       Object.values(CH).forEach(c=>{if(c&&c.resize)c.resize();});
       await pdfSleep(350);
     }
 
-    const el=document.getElementById(item.id);
-    if(!el)continue;
-
-    // Expand block if collapsed
-    const wasCollapsed=item.isBlock&&el.classList.contains('collapsed');
-    if(wasCollapsed){
-      el.classList.remove('collapsed');
-      Object.values(CH).forEach(c=>{if(c&&c.resize)c.resize();});
-      await pdfSleep(300);
-    }
-
-    // Temporarily unlock overflow on all ancestor scroll containers
-    const unlocked=[];
-    let anc=el.parentElement;
-    while(anc&&anc!==document.body){
-      const cs=getComputedStyle(anc);
-      if(cs.overflow!=='visible'||cs.overflowY!=='visible'||anc.style.height){
-        unlocked.push({el:anc,ov:anc.style.overflow,ovy:anc.style.overflowY,h:anc.style.height,mh:anc.style.maxHeight});
-        anc.style.overflow='visible';anc.style.overflowY='visible';
-        if(anc.style.height&&anc.style.height!=='auto')anc.style.height='auto';
-        if(anc.style.maxHeight)anc.style.maxHeight='none';
+    // Expandir bloques colapsados
+    const toRestore=[];
+    for(const sec of combo.sections){
+      const el=document.getElementById(sec.id);
+      if(el&&sec.isBlock&&el.classList.contains('collapsed')){
+        el.classList.remove('collapsed');
+        toRestore.push(el);
       }
-      anc=anc.parentElement;
     }
-    const prevBodyOv=document.body.style.overflow;
-    const prevHtmlOv=document.documentElement.style.overflow;
-    const prevHtmlH=document.documentElement.style.height;
-    document.body.style.overflow='visible';
-    document.documentElement.style.overflow='visible';
-    document.documentElement.style.height='auto';
+    if(toRestore.length){Object.values(CH).forEach(c=>{if(c&&c.resize)c.resize();});await pdfSleep(300);}
 
-    el.scrollIntoView({behavior:'instant',block:'start'});
-    await pdfSleep(120);
+    // Capturar cada sección del combo
+    const canvases=[];
+    const firstEl=document.getElementById(combo.sections[0]?.id);
+    const lockState=firstEl?pdfUnlockOverflow(firstEl):{unlocked:[],saved:{}};
 
-    let cnv;
-    try{
-      cnv=await html2canvas(el,{
-        scale:2,useCORS:true,backgroundColor:'#ffffff',
-        logging:false,allowTaint:true,removeContainer:true,
-        scrollX:0,scrollY:-window.scrollY,
-        windowWidth:Math.max(document.documentElement.scrollWidth,el.scrollWidth+40,1300),
-        windowHeight:Math.max(document.documentElement.scrollHeight,el.scrollHeight+40),
-      });
-    }catch(e){console.warn('pdf capture error:',item.id,e);}
+    for(const sec of combo.sections){
+      const el=document.getElementById(sec.id);
+      if(!el)continue;
+      el.scrollIntoView({behavior:'instant',block:'start'});
+      await pdfSleep(110);
+      try{
+        const cnv=await html2canvas(el,{
+          scale:2,useCORS:true,backgroundColor:'#ffffff',
+          logging:false,allowTaint:true,removeContainer:true,
+          scrollX:0,scrollY:-window.scrollY,
+          windowWidth:Math.max(document.documentElement.scrollWidth,el.scrollWidth+40,1300),
+          windowHeight:Math.max(document.documentElement.scrollHeight,el.scrollHeight+40),
+        });
+        canvases.push(cnv);
+      }catch(e){console.warn('pdf capture error:',sec.id,e);}
+    }
 
-    // Restore overflow
-    unlocked.forEach(u=>{u.el.style.overflow=u.ov;u.el.style.overflowY=u.ovy;u.el.style.height=u.h;u.el.style.maxHeight=u.mh;});
-    document.body.style.overflow=prevBodyOv;
-    document.documentElement.style.overflow=prevHtmlOv;
-    document.documentElement.style.height=prevHtmlH;
+    pdfRestoreOverflow(lockState);
+    toRestore.forEach(el=>el.classList.add('collapsed'));
+    if(!canvases.length)continue;
 
-    if(wasCollapsed)el.classList.add('collapsed');
-    if(!cnv)continue;
-
+    // ── Componer la página ──────────────────────────
     if(!firstPage)pdf.addPage();
     firstPage=false;
 
-    // Header bar (dark teal)
+    // Header
     pdf.setFillColor(44,62,63);
     pdf.rect(0,0,PW,HDR,'F');
-
-    // Simpleza logo on header (white PNG on dark bg)
-    const lH=HDR-2.8;
-    const lW=lH*logoAspect;
+    const lH=HDR-2.8,lW=lH*logoAspect;
     pdf.addImage(logoDataUrl,'PNG',PW-lW-5,1.4,lW,lH);
+    pdf.setTextColor(255,255,255);pdf.setFontSize(8.5);pdf.setFont('helvetica','bold');
+    pdf.text(combo.pageLabel,MG,HDR/2+3.2);
 
-    // Section title in header
-    pdf.setTextColor(255,255,255);
-    pdf.setFontSize(8.5);
-    pdf.setFont('helvetica','bold');
-    pdf.text(item.label,MG,HDR/2+3.2);
-
-    // Content image (centered in remaining space)
+    // Área de contenido
     const cY=HDR+3,cH=PH-cY-MG,cW=PW-2*MG;
-    const aspect=cnv.width/cnv.height;
-    let iW=cW,iH=iW/aspect;
-    if(iH>cH){iH=cH;iW=iH*aspect;}
-    pdf.addImage(cnv.toDataURL('image/jpeg',0.93),'JPEG',MG+(cW-iW)/2,cY,iW,iH);
+
+    // Calcular alturas en mm (cada imagen ocupa todo el ancho disponible)
+    const imgs=canvases.map(c=>({canvas:c,wMM:cW,hMM:cW/(c.width/c.height)}));
+    const gapsTotal=GAP*(imgs.length-1);
+    const totalH=imgs.reduce((s,img)=>s+img.hMM,0)+gapsTotal;
+
+    // Escalar si no entra; centrar verticalmente si sobra espacio
+    const fitScale=totalH>cH?cH/totalH:1;
+    const scaledTotal=totalH*fitScale;
+    let y=cY+(cH-scaledTotal)/2; // centrado vertical
+
+    for(const img of imgs){
+      const iW=img.wMM*fitScale;
+      const iH=img.hMM*fitScale;
+      const x=MG+(cW-iW)/2;
+      pdf.addImage(img.canvas.toDataURL('image/jpeg',0.93),'JPEG',x,y,iW,iH);
+      y+=iH+GAP*fitScale;
+    }
   }
 
-  // Restore original tab
+  // Restaurar pestaña original
   if(curTab!==origTab){
     const origBtn=document.querySelector(`.sb-tab-btn.${origTab}`);
     if(origBtn)switchTab(origTab,origBtn);
   }
 
   progEl.style.display='none';
-  genBtn.disabled=false;
-  genBtn.textContent='⬇ Generar PDF';
+  genBtn.disabled=false;genBtn.textContent='⬇ Generar PDF';
   pdf.save('Agricultura-Financiera-Simpleza.pdf');
   closePdfModal();
 }

@@ -213,7 +213,38 @@ tr.sep td{border-top:2px dashed var(--border)}
 .ct-btn.on.soja2{border-color:var(--teal-d);background:var(--teal-d)}
 .ct-btn.on.soja2 .ct-dot{background:rgba(255,255,255,.7)}
 .pr-off{opacity:.3;pointer-events:none}
+/* ── PDF EXPORT ──────────────────────────────────── */
+.pdf-btn{display:flex;align-items:center;gap:.4rem;padding:.38rem .85rem;background:var(--teal-d);color:#fff;border:none;border-radius:var(--r-md);font-family:var(--font);font-size:.75rem;font-weight:700;cursor:pointer;transition:background .18s;flex-shrink:0}
+.pdf-btn:hover{background:#3a5055}
+.pdf-btn:disabled{background:#8fa8ac;cursor:not-allowed}
+#pdf-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:2000;align-items:center;justify-content:center}
+#pdf-modal-overlay.open{display:flex}
+#pdf-modal{background:#fff;border-radius:var(--r-lg);width:600px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.35);font-family:var(--font);overflow:hidden}
+#pdf-modal-head{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);flex-shrink:0}
+#pdf-modal-head h2{font-size:.95rem;font-weight:800;color:var(--teal-d);display:flex;align-items:center;gap:.5rem}
+.pdf-close{background:none;border:none;font-size:1.1rem;color:var(--muted);cursor:pointer;padding:.2rem .4rem;border-radius:4px;line-height:1}
+.pdf-close:hover{background:#f0ebe4}
+#pdf-modal-body{flex:1;overflow-y:auto;padding:1.1rem 1.4rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.pdf-group-title{font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:.35rem .7rem;border-radius:var(--r-sm);margin-bottom:.6rem;display:flex;align-items:center;gap:.35rem}
+.pdf-group-title.neg{background:#edf5f3;color:var(--teal-d)}
+.pdf-group-title.fin{background:#fdf5d4;color:#6a5200}
+.pdf-check-lbl{display:flex;align-items:center;gap:.5rem;padding:.28rem .4rem;border-radius:5px;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--text);transition:background .13s;user-select:none}
+.pdf-check-lbl:hover{background:#f4f0eb}
+.pdf-check-lbl input{accent-color:var(--teal-d);width:14px;height:14px;flex-shrink:0;cursor:pointer}
+.pdf-group-actions{display:flex;gap:.4rem;margin-bottom:.55rem}
+.pdf-ga-btn{font-size:.65rem;font-weight:600;color:var(--teal-d);background:none;border:1px solid var(--border);border-radius:4px;padding:.15rem .45rem;cursor:pointer;font-family:var(--font)}
+.pdf-ga-btn:hover{background:#edf5f3}
+#pdf-modal-foot{padding:.9rem 1.4rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-shrink:0;background:#fafaf8}
+#pdf-progress{font-size:.72rem;color:var(--muted);flex:1;display:none;font-style:italic}
+.pdf-foot-btns{display:flex;gap:.55rem}
+.pdf-cancel{padding:.42rem .95rem;background:#f7f3ed;border:1px solid var(--border);border-radius:var(--r-md);font-family:var(--font);font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer}
+.pdf-cancel:hover{background:#f0ebe4}
+#pdf-gen-btn{padding:.42rem 1.1rem;background:var(--teal-d);color:#fff;border:none;border-radius:var(--r-md);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:background .18s}
+#pdf-gen-btn:hover{background:#3a5055}
+#pdf-gen-btn:disabled{background:#8fa8ac;cursor:not-allowed}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -266,7 +297,7 @@ tr.sep td{border-top:2px dashed var(--border)}
       </div>
     </div>
   </div>
-  <div class="sb-foot">Simpleza · Valores U$S/ha</div>
+  <div class="sb-foot">Modelo CREA · Valores U$S/ha</div>
 </aside>
 
 <!-- ══ MAIN ════════════════════════════════════ -->
@@ -276,11 +307,13 @@ tr.sep td{border-top:2px dashed var(--border)}
       <h1 id="tb-title">El Negocio</h1>
       <span id="tb-pill" class="tab-pill neg">🌾 Resultado operativo</span>
     </div>
+    <button class="pdf-btn" onclick="openPdfModal()">⬇ Exportar PDF</button>
     </header>
   <div class="content">
 
   <!-- ══════ TAB: EL NEGOCIO ══════════════════ -->
   <div class="tab-content active" id="tab-neg">
+    <div id="pdf-neg-kpis">
     <!-- KPIs: Ingreso / Inversión / Rdo.Op / ROA / MargenVentas -->
     <div class="kpi-row c5">
       <div class="kpi t"><div class="kpi-lbl">Ingreso Bruto</div><div class="kpi-v" id="kpi-ib">—</div><div class="kpi-s">U$S/ha ponderado</div></div>
@@ -297,7 +330,9 @@ tr.sep td{border-top:2px dashed var(--border)}
       <button class="scen-btn" data-ps="-15" data-ys="-20" onclick="applyScen(this)"><span class="s-tag">⛈ Pesimista</span><span class="s-val">P−15% R−20%</span></button>
       <button class="scen-btn" data-ps="-20" data-ys="-50" onclick="applyScen(this)"><span class="s-tag">🔴 Estrés</span><span class="s-val">P−20% R−50%</span></button>
     </div>
+    </div><!-- /pdf-neg-kpis -->
     <!-- Charts: Bar Rdo.Op + Line Rdo.Op sensibilidad + Line ROA sensibilidad -->
+    <div id="pdf-neg-charts">
     <div class="g3" style="margin-bottom:1rem">
       <div class="ic">
         <div class="ic-ttl gr"><div class="ic-ttl-l">Resultado Op. por Cultivo</div><span id="neg-rdo-delta" style="font-size:.64rem;font-weight:600;color:var(--muted)"></span></div>
@@ -315,6 +350,7 @@ tr.sep td{border-top:2px dashed var(--border)}
         <p style="font-size:.61rem;color:var(--muted);text-align:center;margin-top:.3rem">Eje X = rinde −50%→+20% · Curvas = precio −10%/0%/+10%</p>
       </div>
     </div>
+    </div><!-- /pdf-neg-charts -->
 
     <!-- PARAMS BLOCK -->
     <div class="blk" id="blk-params">
@@ -452,6 +488,7 @@ tr.sep td{border-top:2px dashed var(--border)}
 
   <!-- ══════ TAB: EL NEGOCIO FINANCIADO ══════ -->
   <div class="tab-content" id="tab-fin">
+    <div id="pdf-fin-kpis">
     <!-- KPIs: Rdo.Op / ROA / Utilidad / ROE / Apalancamiento -->
     <div class="kpi-row c5">
       <div class="kpi t"><div class="kpi-lbl">Resultado Operativo</div><div class="kpi-v" id="kpi-rdoOp2">—</div><div class="kpi-s">U$S/ha input al modelo</div></div>
@@ -468,7 +505,9 @@ tr.sep td{border-top:2px dashed var(--border)}
       <button class="scen-btn" data-ps="-15" data-ys="-20" onclick="applyScen(this)"><span class="s-tag">⛈ Pesimista</span><span class="s-val">P−15% R−20%</span></button>
       <button class="scen-btn" data-ps="-20" data-ys="-50" onclick="applyScen(this)"><span class="s-tag">🔴 Estrés</span><span class="s-val">P−20% R−50%</span></button>
     </div>
+    </div><!-- /pdf-fin-kpis -->
     <!-- ROA+ROE chart + Financial table -->
+    <div id="pdf-fin-charts">
     <div class="g2" style="margin-bottom:1rem">
       <div class="ic">
         <div class="ic-ttl or"><div class="ic-ttl-l">Sensibilidad ROA</div><span style="font-size:.62rem;color:var(--muted)">X=rinde · curvas=precio</span></div>
@@ -481,6 +520,7 @@ tr.sep td{border-top:2px dashed var(--border)}
         <p style="font-size:.61rem;color:var(--muted);text-align:center;margin-top:.3rem">Eje X = rinde −50%→+20% · Curvas = precio −10%/0%/+10%</p>
       </div>
     </div>
+    </div><!-- /pdf-fin-charts -->
 
     <!-- DEUDA DETALLE BLOCK -->
     <div class="blk" id="blk-deuda">
@@ -568,6 +608,54 @@ tr.sep td{border-top:2px dashed var(--border)}
   </div><!-- /tab-fin -->
   </div><!-- .content -->
 </main>
+</div>
+
+<!-- ══ PDF EXPORT MODAL ════════════════════════════ -->
+<div id="pdf-modal-overlay">
+  <div id="pdf-modal">
+    <div id="pdf-modal-head">
+      <h2>📄 Exportar PDF — Seleccioná las secciones</h2>
+      <button class="pdf-close" onclick="closePdfModal()">✕</button>
+    </div>
+    <div id="pdf-modal-body">
+      <!-- El Negocio -->
+      <div>
+        <div class="pdf-group-title neg">🌾 El Negocio</div>
+        <div class="pdf-group-actions">
+          <button class="pdf-ga-btn" onclick="pdfToggleAll('neg',true)">Seleccionar todo</button>
+          <button class="pdf-ga-btn" onclick="pdfToggleAll('neg',false)">Ninguno</button>
+        </div>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="pdf-neg-kpis" checked> Indicadores Clave (KPIs)</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="pdf-neg-charts" checked> Gráficos de Sensibilidad</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-params" checked> Parámetros del Modelo</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-costos"> Costos Directos Desagregados</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-pnl"> P&L por Cultivo</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-rind"> Rindes de Indiferencia</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="neg" value="blk-sens"> Tabla de Sensibilidad</label>
+      </div>
+      <!-- El Negocio Financiado -->
+      <div>
+        <div class="pdf-group-title fin">💰 El Negocio Financiado</div>
+        <div class="pdf-group-actions">
+          <button class="pdf-ga-btn" onclick="pdfToggleAll('fin',true)">Seleccionar todo</button>
+          <button class="pdf-ga-btn" onclick="pdfToggleAll('fin',false)">Ninguno</button>
+        </div>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="pdf-fin-kpis" checked> Indicadores Clave (KPIs)</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="pdf-fin-charts" checked> Gráficos ROA / ROE</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-deuda" checked> Estructura de Deuda</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-calor"> Mapa de Calor</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-dupont" checked> Descomposición DuPont</label>
+        <label class="pdf-check-lbl"><input type="checkbox" data-tab="fin" value="blk-socio"> Socio a Riesgo</label>
+      </div>
+    </div>
+    <div id="pdf-modal-foot">
+      <span id="pdf-progress"></span>
+      <div class="pdf-foot-btns">
+        <button class="pdf-cancel" onclick="closePdfModal()">Cancelar</button>
+        <button id="pdf-gen-btn" onclick="generatePDF()">⬇ Generar PDF</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1073,6 +1161,163 @@ const LOGO_GRIS='iVBORw0KGgoAAAANSUhEUgAACCQAAAMuCAYAAADLsEAmAAAAAXNSR0IArs4c6QA
 $('logo-sb').src='data:image/png;base64,'+LOGO_BLANCO;
 // logo-top removed from topbar
 buildCostTable();updateRotSum();update();
+
+// ═══ PDF EXPORT ════════════════════════════════════
+const PDF_SECTIONS=[
+  {id:'pdf-neg-kpis',   tab:'neg', label:'El Negocio — Indicadores Clave',            isBlock:false},
+  {id:'pdf-neg-charts', tab:'neg', label:'El Negocio — Gráficos de Sensibilidad',      isBlock:false},
+  {id:'blk-params',     tab:'neg', label:'El Negocio — Parámetros del Modelo',         isBlock:true},
+  {id:'blk-costos',     tab:'neg', label:'El Negocio — Costos Directos',               isBlock:true},
+  {id:'blk-pnl',        tab:'neg', label:'El Negocio — P&L por Cultivo',               isBlock:true},
+  {id:'blk-rind',       tab:'neg', label:'El Negocio — Rindes de Indiferencia',        isBlock:true},
+  {id:'blk-sens',       tab:'neg', label:'El Negocio — Tabla de Sensibilidad',         isBlock:true},
+  {id:'pdf-fin-kpis',   tab:'fin', label:'Negocio Financiado — Indicadores Clave',     isBlock:false},
+  {id:'pdf-fin-charts', tab:'fin', label:'Negocio Financiado — Gráficos ROA / ROE',    isBlock:false},
+  {id:'blk-deuda',      tab:'fin', label:'Negocio Financiado — Estructura de Deuda',   isBlock:true},
+  {id:'blk-calor',      tab:'fin', label:'Negocio Financiado — Mapa de Calor',         isBlock:true},
+  {id:'blk-dupont',     tab:'fin', label:'Negocio Financiado — Descomposición DuPont', isBlock:true},
+  {id:'blk-socio',      tab:'fin', label:'Negocio Financiado — Socio a Riesgo',        isBlock:true},
+];
+
+function openPdfModal(){$('pdf-modal-overlay').classList.add('open');}
+function closePdfModal(){$('pdf-modal-overlay').classList.remove('open');}
+function pdfSleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function getCurrentTabName(){const b=document.querySelector('.sb-tab-btn.active');return b&&b.classList.contains('fin')?'fin':'neg';}
+function pdfToggleAll(tab,checked){document.querySelectorAll(`#pdf-modal-body input[data-tab="${tab}"]`).forEach(c=>c.checked=checked);}
+
+async function generatePDF(){
+  const checked=[...document.querySelectorAll('#pdf-modal-body input[type=checkbox]:checked')];
+  if(!checked.length){alert('Seleccioná al menos una sección.');return;}
+  const selIds=new Set(checked.map(c=>c.value));
+  const items=PDF_SECTIONS.filter(s=>selIds.has(s.id));
+
+  const genBtn=$('pdf-gen-btn');
+  const progEl=$('pdf-progress');
+  genBtn.disabled=true;
+  genBtn.textContent='⏳ Generando...';
+  progEl.style.display='block';
+  progEl.textContent='Iniciando...';
+  await pdfSleep(60);
+
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const PW=297,PH=210,HDR=13,MG=8;
+  const logoDataUrl='data:image/png;base64,'+LOGO_BLANCO;
+
+  // Detect logo aspect ratio once
+  const logoAspect=await new Promise(res=>{
+    const img=new Image();img.onload=()=>res(img.width/img.height);img.onerror=()=>res(5);img.src=logoDataUrl;
+  });
+
+  const origTab=getCurrentTabName();
+  let curTab=origTab;
+  let firstPage=true;
+
+  for(let i=0;i<items.length;i++){
+    const item=items[i];
+    progEl.textContent=`Procesando ${i+1} de ${items.length}: ${item.label.split('—')[1]?.trim()||item.label}...`;
+
+    // Switch tab if needed
+    if(item.tab!==curTab){
+      const tabBtn=document.querySelector(`.sb-tab-btn.${item.tab}`);
+      if(tabBtn){switchTab(item.tab,tabBtn);curTab=item.tab;}
+      await pdfSleep(500);
+      Object.values(CH).forEach(c=>{if(c&&c.resize)c.resize();});
+      await pdfSleep(350);
+    }
+
+    const el=document.getElementById(item.id);
+    if(!el)continue;
+
+    // Expand block if collapsed
+    const wasCollapsed=item.isBlock&&el.classList.contains('collapsed');
+    if(wasCollapsed){
+      el.classList.remove('collapsed');
+      Object.values(CH).forEach(c=>{if(c&&c.resize)c.resize();});
+      await pdfSleep(300);
+    }
+
+    // Temporarily unlock overflow on all ancestor scroll containers
+    const unlocked=[];
+    let anc=el.parentElement;
+    while(anc&&anc!==document.body){
+      const cs=getComputedStyle(anc);
+      if(cs.overflow!=='visible'||cs.overflowY!=='visible'||anc.style.height){
+        unlocked.push({el:anc,ov:anc.style.overflow,ovy:anc.style.overflowY,h:anc.style.height,mh:anc.style.maxHeight});
+        anc.style.overflow='visible';anc.style.overflowY='visible';
+        if(anc.style.height&&anc.style.height!=='auto')anc.style.height='auto';
+        if(anc.style.maxHeight)anc.style.maxHeight='none';
+      }
+      anc=anc.parentElement;
+    }
+    const prevBodyOv=document.body.style.overflow;
+    const prevHtmlOv=document.documentElement.style.overflow;
+    const prevHtmlH=document.documentElement.style.height;
+    document.body.style.overflow='visible';
+    document.documentElement.style.overflow='visible';
+    document.documentElement.style.height='auto';
+
+    el.scrollIntoView({behavior:'instant',block:'start'});
+    await pdfSleep(120);
+
+    let cnv;
+    try{
+      cnv=await html2canvas(el,{
+        scale:2,useCORS:true,backgroundColor:'#ffffff',
+        logging:false,allowTaint:true,removeContainer:true,
+        scrollX:0,scrollY:-window.scrollY,
+        windowWidth:Math.max(document.documentElement.scrollWidth,el.scrollWidth+40,1300),
+        windowHeight:Math.max(document.documentElement.scrollHeight,el.scrollHeight+40),
+      });
+    }catch(e){console.warn('pdf capture error:',item.id,e);}
+
+    // Restore overflow
+    unlocked.forEach(u=>{u.el.style.overflow=u.ov;u.el.style.overflowY=u.ovy;u.el.style.height=u.h;u.el.style.maxHeight=u.mh;});
+    document.body.style.overflow=prevBodyOv;
+    document.documentElement.style.overflow=prevHtmlOv;
+    document.documentElement.style.height=prevHtmlH;
+
+    if(wasCollapsed)el.classList.add('collapsed');
+    if(!cnv)continue;
+
+    if(!firstPage)pdf.addPage();
+    firstPage=false;
+
+    // Header bar (dark teal)
+    pdf.setFillColor(44,62,63);
+    pdf.rect(0,0,PW,HDR,'F');
+
+    // Simpleza logo on header (white PNG on dark bg)
+    const lH=HDR-2.8;
+    const lW=lH*logoAspect;
+    pdf.addImage(logoDataUrl,'PNG',PW-lW-5,1.4,lW,lH);
+
+    // Section title in header
+    pdf.setTextColor(255,255,255);
+    pdf.setFontSize(8.5);
+    pdf.setFont('helvetica','bold');
+    pdf.text(item.label,MG,HDR/2+3.2);
+
+    // Content image (centered in remaining space)
+    const cY=HDR+3,cH=PH-cY-MG,cW=PW-2*MG;
+    const aspect=cnv.width/cnv.height;
+    let iW=cW,iH=iW/aspect;
+    if(iH>cH){iH=cH;iW=iH*aspect;}
+    pdf.addImage(cnv.toDataURL('image/jpeg',0.93),'JPEG',MG+(cW-iW)/2,cY,iW,iH);
+  }
+
+  // Restore original tab
+  if(curTab!==origTab){
+    const origBtn=document.querySelector(`.sb-tab-btn.${origTab}`);
+    if(origBtn)switchTab(origTab,origBtn);
+  }
+
+  progEl.style.display='none';
+  genBtn.disabled=false;
+  genBtn.textContent='⬇ Generar PDF';
+  pdf.save('Agricultura-Financiera-Simpleza.pdf');
+  closePdfModal();
+}
 </script>
 </body>
 </html>

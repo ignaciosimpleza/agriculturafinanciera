@@ -252,6 +252,8 @@ tr.sep td{border-top:2px dashed var(--border)}
 .ct-btn.add-crop-btn:hover{background:#edf5f3;border-style:solid}
 .crop-del-btn{width:22px;height:22px;border:none;background:#fde8e6;color:#CD6155;border-radius:4px;cursor:pointer;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;transition:background .15s}
 .crop-del-btn:hover{background:#f5b7b1}
+.crop-edit-btn{width:22px;height:22px;border:none;background:#edf5f3;color:var(--teal-d);border-radius:4px;cursor:pointer;font-size:.72rem;display:inline-flex;align-items:center;justify-content:center;padding:0;line-height:1;margin-right:.18rem;transition:background .15s}
+.crop-edit-btn:hover{background:#d4e5e2}
 /* ── MODAL AGREGAR CULTIVO ────────────────────────── */
 .nc-lbl{display:block;font-size:.71rem;font-weight:700;color:var(--muted);margin-bottom:.28rem}
 .nc-inp{padding:.38rem .5rem;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:.82rem;background:#fff;color:var(--text);transition:border-color .2s}
@@ -400,7 +402,7 @@ tr.sep td{border-top:2px dashed var(--border)}
                 <th>Rotación (%)</th>
                 <th>G.Com. (%IB)</th>
                 <th>Cosecha (%IB)</th>
-                <th style="width:28px"></th>
+                <th style="width:60px"></th>
               </tr></thead>
               <tbody id="params-tbody">
                 <!-- Generado por buildParamsTable() -->
@@ -799,7 +801,7 @@ function buildParamsTable(){
       ?`<input type="number" id="rot-${k}" value="0" readonly style="background:#f7f3ed;color:var(--muted)">`
       :`<input type="number" id="rot-${k}" value="${d.rot}" min="0" max="100" oninput="updateRotSum();update()">`;
     const delTd=isCustom
-      ?`<button class="crop-del-btn" onclick="removeCrop('${k}')" title="Eliminar cultivo">✕</button>`
+      ?`<button class="crop-edit-btn" onclick="openEditCropModal('${k}')" title="Editar cultivo">✎</button><button class="crop-del-btn" onclick="removeCrop('${k}')" title="Eliminar cultivo">✕</button>`
       :'';
     const tr=document.createElement('tr');
     tr.id='pr-'+k;
@@ -817,7 +819,19 @@ function buildParamsTable(){
 }
 
 // ═══ GESTIÓN DE CULTIVOS ══════════════════════════════════════
+let _editingCrop=null;
+
+function _setModalMode(editKey){
+  _editingCrop=editKey;
+  const isEdit=!!editKey;
+  $('crop-modal-title').textContent=isEdit?'✎ Editar Cultivo':'🌱 Agregar Cultivo';
+  $('crop-modal-submit').textContent=isEdit?'💾 Guardar cambios':'🌱 Agregar cultivo';
+  // El selector "copiar de" sólo aplica para nuevo cultivo
+  $('nc-base-row').style.display=isEdit?'none':'block';
+}
+
 function openAddCropModal(){
+  _setModalMode(null);
   // Llenar select "copiar de"
   const sel=$('nc-base');
   if(sel){
@@ -841,8 +855,26 @@ function openAddCropModal(){
   $('crop-modal-overlay').style.display='flex';
 }
 
+function openEditCropModal(key){
+  if(!CROPS.includes(key))return;
+  _setModalMode(key);
+  // Tomar valores actuales de la tabla (para reflejar cambios sin guardar)
+  const pe=$('p-'+key),re=$('r-'+key),ro=$('rot-'+key),gc=$('gcom-'+key),co=$('cose-'+key);
+  $('nc-nombre').value=CROP_LBL[key]||'';
+  const t=CROP_TYPE[key]||'custom-summer';
+  $('nc-tipo').value=(t==='custom-winter'||t==='winter')?'winter':'summer';
+  $('nc-precio').value=pe?+pe.value:(CROP_DATA_DEFAULTS[key]?.price||0);
+  $('nc-rinde').value=re?+re.value:(CROP_DATA_DEFAULTS[key]?.rinde||0);
+  $('nc-rot').value=ro?+ro.value:(CROP_DATA_DEFAULTS[key]?.rot||0);
+  $('nc-gcom').value=gc?+gc.value:(CROP_DATA_DEFAULTS[key]?.gcom||0);
+  $('nc-cose').value=co?+co.value:(CROP_DATA_DEFAULTS[key]?.cose||0);
+  _fillGdirGrid(key);
+  $('crop-modal-overlay').style.display='flex';
+}
+
 function closeAddCropModal(){
   $('crop-modal-overlay').style.display='none';
+  _editingCrop=null;
 }
 
 function _fillGdirGrid(baseKey){
@@ -881,16 +913,23 @@ function fillFromBase(){
 function submitAddCrop(){
   const nombre=($('nc-nombre').value||'').trim();
   if(!nombre){alert('Ingresá un nombre para el cultivo.');return;}
-  // Generar clave única
-  let key='c_'+nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'_').slice(0,14);
-  let attempt=key,n=2;while(CROPS.includes(attempt)){attempt=key+'_'+n++;}key=attempt;
   const tipo=$('nc-tipo').value; // 'summer' | 'winter'
-  // Insertar antes de soja2 (siempre al final del array)
-  const s2idx=CROPS.findIndex(k=>CROP_TYPE[k]==='soja2');
-  if(s2idx>-1)CROPS.splice(s2idx,0,key);else CROPS.push(key);
-  CROP_LBL[key]=nombre;
-  CROP_TYPE[key]='custom-'+tipo;
-  CROP_ON[key]=true;
+  let key;
+  if(_editingCrop){
+    key=_editingCrop;
+    CROP_LBL[key]=nombre;
+    CROP_TYPE[key]='custom-'+tipo;
+  }else{
+    // Generar clave única
+    key='c_'+nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'_').slice(0,14);
+    let attempt=key,n=2;while(CROPS.includes(attempt)){attempt=key+'_'+n++;}key=attempt;
+    // Insertar antes de soja2 (siempre al final del array)
+    const s2idx=CROPS.findIndex(k=>CROP_TYPE[k]==='soja2');
+    if(s2idx>-1)CROPS.splice(s2idx,0,key);else CROPS.push(key);
+    CROP_LBL[key]=nombre;
+    CROP_TYPE[key]='custom-'+tipo;
+    CROP_ON[key]=true;
+  }
   CROP_DATA_DEFAULTS[key]={
     price:+$('nc-precio').value,
     rinde:+$('nc-rinde').value,
@@ -904,7 +943,6 @@ function submitAddCrop(){
   });
   closeAddCropModal();
   buildParamsTable();buildCostTable();updateRotSum();update();
-  saveCustomCrops();
 }
 
 function removeCrop(key){
@@ -914,37 +952,12 @@ function removeCrop(key){
   delete CROP_DATA_DEFAULTS[key];
   COST_COMPONENTS.forEach(comp=>{if(GDIR_BASE[comp.key])delete GDIR_BASE[comp.key][key];});
   buildParamsTable();buildCostTable();updateRotSum();update();
-  saveCustomCrops();
 }
 
-// ─ Persistencia (localStorage) ────────────────────────────────
-function saveCustomCrops(){
-  const custom=CROPS.filter(k=>CROP_TYPE[k]&&CROP_TYPE[k].startsWith('custom'));
-  const data=custom.map(k=>({
-    key:k,label:CROP_LBL[k],type:CROP_TYPE[k],on:CROP_ON[k],
-    defaults:CROP_DATA_DEFAULTS[k]||{price:0,rinde:0,rot:0,gcom:0,cose:0},
-    gdir:Object.fromEntries(COST_COMPONENTS.map(c=>[c.key,GDIR_BASE[c.key][k]||0]))
-  }));
-  try{localStorage.setItem('agro_custom_crops_v1',JSON.stringify(data));}catch(e){console.warn('saveCustomCrops:',e);}
-}
-
+// ─ Sin persistencia: cada refresh vuelve a los datos hardcodeados ──
+function saveCustomCrops(){/* no-op */}
 function loadCustomCrops(){
-  try{
-    const raw=localStorage.getItem('agro_custom_crops_v1');
-    if(!raw)return;
-    const data=JSON.parse(raw);
-    const s2idx=CROPS.findIndex(k=>CROP_TYPE[k]==='soja2');
-    const insertAt=s2idx>-1?s2idx:CROPS.length;
-    data.forEach((d,i)=>{
-      if(CROPS.includes(d.key))return;
-      CROPS.splice(insertAt+i,0,d.key);
-      CROP_LBL[d.key]=d.label;
-      CROP_TYPE[d.key]=d.type;
-      CROP_ON[d.key]=d.on??true;
-      CROP_DATA_DEFAULTS[d.key]=d.defaults||{price:0,rinde:0,rot:0,gcom:0,cose:0};
-      COST_COMPONENTS.forEach(c=>{GDIR_BASE[c.key][d.key]=d.gdir?.[c.key]||0;});
-    });
-  }catch(e){console.warn('loadCustomCrops:',e);}
+  try{localStorage.removeItem('agro_custom_crops_v1');}catch(e){}
 }
 
 function buildCostTable(){
@@ -1312,7 +1325,9 @@ function update(){
     ['Patrimonio Neto',s=>fmtI(s.pn),false],['Rdo. Operativo',s=>fmt(s.rdoProd),false],
     ['Intereses totales',s=>'('+s.int.toFixed(1)+')',false],['Utilidad Neta',s=>fmt(s.util),true],
     ['ROE',s=>fmtPct(s.roe),true],['ROA',s=>fmtPct(s.roa),false],
-    ['Margen de Ventas',s=>fmtPct(s.mv),false],['Apalancamiento A/PN',s=>s.apal.toFixed(2)+'×',false],
+    ['Margen de Ventas',s=>fmtPct(s.mnet),false],
+    ['Rotación (V/A)',s=>s.rot.toFixed(2)+'×',false],
+    ['Apalancamiento A/PN',s=>s.apal.toFixed(2)+'×',false],
   ];
   ['fin-full-tbody'].forEach(id=>{const tf=$(id);if(!tf)return;tf.innerHTML='';FR.forEach(([lbl,fn,hl])=>{const tr=document.createElement('tr');if(hl)tr.className='hl';tr.innerHTML=`<td>${lbl}</td>${[sc0,sc25,sc50,sc75].map(s=>`<td>${fn(s)}</td>`).join('')}`;tf.appendChild(tr);});});
 
@@ -1578,7 +1593,7 @@ async function generatePDF(){
 <div id="crop-modal-overlay">
   <div id="crop-modal">
     <div id="crop-modal-head">
-      <h2>🌱 Agregar Cultivo</h2>
+      <h2 id="crop-modal-title">🌱 Agregar Cultivo</h2>
       <button onclick="closeAddCropModal()" style="background:none;border:none;font-size:1rem;color:var(--muted);cursor:pointer;padding:.2rem .45rem;border-radius:4px;line-height:1">✕</button>
     </div>
     <div id="crop-modal-body">
@@ -1597,7 +1612,7 @@ async function generatePDF(){
         </div>
       </div>
       <!-- Partir de otro cultivo -->
-      <div>
+      <div id="nc-base-row">
         <label class="nc-lbl">📋 Copiar parámetros de otro cultivo (opcional)</label>
         <select id="nc-base" onchange="fillFromBase()" class="nc-inp" style="width:100%">
           <option value="">— Desde cero —</option>
@@ -1637,7 +1652,7 @@ async function generatePDF(){
     </div>
     <div id="crop-modal-foot">
       <button onclick="closeAddCropModal()" style="padding:.38rem .9rem;background:#f7f3ed;border:1px solid var(--border);border-radius:var(--r-md);font-family:var(--font);font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer">Cancelar</button>
-      <button onclick="submitAddCrop()" style="padding:.38rem 1.1rem;background:var(--teal-d);color:#fff;border:none;border-radius:var(--r-md);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:background .18s">🌱 Agregar cultivo</button>
+      <button id="crop-modal-submit" onclick="submitAddCrop()" style="padding:.38rem 1.1rem;background:var(--teal-d);color:#fff;border:none;border-radius:var(--r-md);font-family:var(--font);font-size:.78rem;font-weight:700;cursor:pointer;transition:background .18s">🌱 Agregar cultivo</button>
     </div>
   </div>
 </div>

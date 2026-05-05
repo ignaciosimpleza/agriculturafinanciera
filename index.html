@@ -1104,7 +1104,9 @@ function update(){
     ['Patrimonio Neto',s=>fmtI(s.pn),false],['Rdo. Operativo',s=>fmt(s.rdoProd),false],
     ['Intereses totales',s=>'('+s.int.toFixed(1)+')',false],['Utilidad Neta',s=>fmt(s.util),true],
     ['ROE',s=>fmtPct(s.roe),true],['ROA',s=>fmtPct(s.roa),false],
-    ['Margen de Ventas',s=>fmtPct(s.mv),false],['Apalancamiento A/PN',s=>s.apal.toFixed(2)+'×',false],
+    ['Margen de Ventas',s=>fmtPct(s.mnet),false],
+    ['Rotación (V/A)',s=>s.rot.toFixed(2)+'×',false],
+    ['Apalancamiento A/PN',s=>s.apal.toFixed(2)+'×',false],
   ];
   ['fin-full-tbody'].forEach(id=>{const tf=$(id);if(!tf)return;tf.innerHTML='';FR.forEach(([lbl,fn,hl])=>{const tr=document.createElement('tr');if(hl)tr.className='hl';tr.innerHTML=`<td>${lbl}</td>${[sc0,sc25,sc50,sc75].map(s=>`<td>${fn(s)}</td>`).join('')}`;tf.appendChild(tr);});});
 

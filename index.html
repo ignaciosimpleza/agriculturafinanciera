@@ -1222,11 +1222,14 @@ function saveHtmlSnapshot(){
   const today=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
   const inject=`
 <style id="__snap-css">
+/* Mientras se hidrata, ocultamos el contenido para evitar flash con defaults */
+html.__snap-loading body{visibility:hidden}
+/* Barra superior */
 #__snap-bar{position:fixed;top:0;left:0;right:0;z-index:9999;
   background:#2c3e3f;color:#e8eeef;display:flex;align-items:center;
   justify-content:space-between;padding:.42rem 1.2rem;gap:1rem;flex-shrink:0;
   font-family:'Sora',sans-serif;font-size:.74rem;font-weight:600;
-  box-shadow:0 2px 10px rgba(0,0,0,.35)}
+  box-shadow:0 2px 10px rgba(0,0,0,.35);visibility:visible}
 #__snap-bar .sbl{display:flex;align-items:center;gap:.55rem}
 #__snap-bar .sbm{color:#8fa8ac;font-weight:400}
 #__snap-bar .sbu{padding:.28rem .75rem;background:rgba(50,232,169,.15);color:#32E8A9;
@@ -1235,33 +1238,45 @@ function saveHtmlSnapshot(){
 #__snap-bar .sbu:hover{background:rgba(50,232,169,.28)}
 #__snap-bar .sbk{color:#32E8A9;font-size:.72rem}
 body.__snl .app{margin-top:36px;height:calc(100vh - 36px)}
-body.__snl input,body.__snl select{pointer-events:none!important;cursor:default!important}
-body.__snl button:not([data-snok]){pointer-events:none!important;cursor:default!important}
-body.__snl .sb-tab-btn{pointer-events:auto!important;cursor:pointer!important}
+/* Solo bloqueamos los DATOS: parámetros, costos, arrend/adm y toggles de cultivos */
+body.__snl #params-tbody input,
+body.__snl #cost-tbody input,
+body.__snl #arrend,
+body.__snl #adm-total{
+  pointer-events:none!important;cursor:default!important;
+  background:#f0ebe4!important;color:#7a8a8c!important;
+  border-color:#e0d8cc!important
+}
+body.__snl .ct-btn[data-crop]{pointer-events:none!important;cursor:default!important;opacity:.92}
+/* Botones de export se deshabilitan en el snapshot (evitar export-from-export) */
+body.__snl .pdf-btn{pointer-events:none!important;opacity:.45}
+/* Todo lo demás (escenarios, sliders, leverage, fin-rate, partner, tabs, collapses, hover en charts) sigue interactivo */
 </style>
 <div id="__snap-bar">
-  <div class="sbl"><span>🔒</span><span>Vista de solo lectura</span><span class="sbm">— Snapshot ${today}</span></div>
-  <button class="sbu" data-snok="1" onclick="__su()">✏️ Editar</button>
+  <div class="sbl"><span>🔒</span><span>Datos bloqueados — solo lectura</span><span class="sbm">· Snapshot ${today} · podés cambiar escenarios, leverage y navegar</span></div>
+  <button class="sbu" data-snok="1" onclick="__su()">✏️ Desbloquear datos</button>
 </div>
 <script>
 (function(){
+  document.documentElement.classList.add('__snap-loading');
   var S=${JSON.stringify(snap)};
   var PWD='Simpleza2026!';
-  function sv(id,v){var e=document.getElementById(id);if(e)e.value=v;}
-  function go(){
+  function sv(id,v){var e=document.getElementById(id);if(e!=null&&v!=null)e.value=v;}
+  function hydrate(){
     sv('price-shock',S.priceShock);sv('yield-shock',S.yieldShock);
     sv('leverage',S.leverage);sv('fin-rate',S.finRate);
     sv('partner-pct',S.partnerPct);sv('arrend',S.arrend);sv('adm-total',S.adm);
-    var rp=document.getElementById('risk-partner');if(rp)rp.checked=S.riskPartner;
-    var ps=document.getElementById('ps-val');if(ps)ps.textContent=S.priceShock+'%';
-    var ys=document.getElementById('ys-val');if(ys)ys.textContent=S.yieldShock+'%';
-    var pp=document.getElementById('pp-val');if(pp)pp.textContent=S.partnerPct+'%';
-    Object.assign(CROP_ON,S.cropOn);
+    var rp=document.getElementById('risk-partner');if(rp)rp.checked=!!S.riskPartner;
+    var ps=document.getElementById('ps-val');if(ps)ps.textContent=(S.priceShock>0?'+':'')+S.priceShock+'%';
+    var ys=document.getElementById('ys-val');if(ys)ys.textContent=(S.yieldShock>0?'+':'')+S.yieldShock+'%';
+    var pp=document.getElementById('p-pct-val')||document.getElementById('pp-val');
+    if(pp)pp.textContent=S.partnerPct+'%';
+    if(typeof CROP_ON==='object')Object.assign(CROP_ON,S.cropOn);
     document.querySelectorAll('.ct-btn[data-crop]').forEach(function(b){
-      b.classList.toggle('on',!!CROP_ON[b.dataset.crop]);
+      b.classList.toggle('on',!!(S.cropOn||{})[b.dataset.crop]);
     });
     document.querySelectorAll('[id^="pr-"]').forEach(function(row){
-      var k=row.id.replace('pr-','');row.classList.toggle('pr-off',!CROP_ON[k]);
+      var k=row.id.replace('pr-','');row.classList.toggle('pr-off',!(S.cropOn||{})[k]);
     });
     ['soja1','maiz','girasol','trigo','cebada','colza','soja2'].forEach(function(k){
       sv(k==='soja1'?'p-soja':'p-'+k,S.prices[k]);
@@ -1275,20 +1290,39 @@ body.__snl .sb-tab-btn{pointer-events:auto!important;cursor:pointer!important}
     });
     if(typeof updateRotSum==='function')updateRotSum();
     if(typeof update==='function')update();
+    // Recalcular cuando el usuario juegue con escenarios / leverage / partner
+    if(typeof update==='function'){
+      ['price-shock','yield-shock','leverage','fin-rate','partner-pct'].forEach(function(id){
+        var e=document.getElementById(id);if(e)e.addEventListener('input',update);
+        if(e)e.addEventListener('change',update);
+      });
+    }
     document.body.classList.add('__snl');
+    document.documentElement.classList.remove('__snap-loading');
+    // Fuerza un resize de los charts una vez visible (canvas dpr)
+    setTimeout(function(){
+      if(typeof CH==='object')Object.values(CH).forEach(function(c){if(c&&c.resize)c.resize();});
+    },80);
   }
   window.__su=function(){
-    var p=prompt('Ingresá la contraseña para editar:');
+    var p=prompt('Ingresá la contraseña para desbloquear los datos:');
     if(p===null)return;
     if(p===PWD){
       document.body.classList.remove('__snl');
       var bar=document.getElementById('__snap-bar');
       if(bar){bar.querySelector('.sbu').style.display='none';
         var ok=document.createElement('span');ok.className='sbk';
-        ok.textContent='✅ Modo edición activo';bar.appendChild(ok);}
+        ok.textContent='✅ Datos desbloqueados';bar.appendChild(ok);}
     }else{alert('Contraseña incorrecta.');}
   };
-  setTimeout(go,80);
+  function tryHydrate(tries){
+    if(typeof update==='function'){hydrate();return;}
+    if(tries<=0){hydrate();return;}
+    setTimeout(function(){tryHydrate(tries-1);},50);
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){tryHydrate(40);});
+  }else{tryHydrate(40);}
 })();
 <\/script>`;
 

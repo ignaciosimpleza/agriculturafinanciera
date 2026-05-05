@@ -1326,8 +1326,16 @@ body.__snl .pdf-btn{pointer-events:none!important;opacity:.45}
 })();
 <\/script>`;
 
-  // 4 — Inyectar antes de </body> ──────────────────
-  html=html.replace(/<\/body>/i,inject+'\n</body>');
+  // 4 — Inyectar antes del último </body> ─────────
+  // OJO: NO usar .replace(/<\/body>/i, ...) porque matchea el primero, y el
+  // código fuente de esta misma función contiene la string '</body>' literal,
+  // lo cual hace que el inject termine dentro del <script> principal.
+  const closeIdx=html.lastIndexOf('</body>');
+  if(closeIdx>=0){
+    html=html.slice(0,closeIdx)+inject+'\n'+html.slice(closeIdx);
+  }else{
+    html+=inject;
+  }
 
   // 5 — Descargar ───────────────────────────────────
   const date=new Date().toISOString().slice(0,10);
